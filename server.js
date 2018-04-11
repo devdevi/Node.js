@@ -35,12 +35,20 @@ var url = require('url')
 
 function iniciar(route, handle) {
   function onRequest(request, response){
+      var dataPosteada = '';
       var pathname = url.parse(request.url).pathname;
       console.log('Peticion para' + pathname + ' recibida.')
-      response.writeHead(200,{'Content-Type': 'text/html'});
-      var content = route(handle, pathname)
-      response.write(content);
-      response.end();
+
+      request.setEncoding('utf8');
+      // definimos que espramos que la imformacion recibida sea utf-8
+      // Agregamos un listener que  llena la data cada que que un trozo de texto llega
+      request.addListener('data', function(trozoPosteado){
+          dataPosteada += trozoPosteado;
+          console.log(`Recibido trozo POST ${trozoPosteado} .` )
+      })
+      request.addListener('end', function(){
+          route(handle, pathname, response, dataPosteada)
+      })
   }
   http.createServer(onRequest).listen(8888)
 
